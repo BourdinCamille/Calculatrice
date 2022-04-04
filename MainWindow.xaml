@@ -1,0 +1,80 @@
+﻿<Window x:Class="Calculatrice.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Calculatrice"
+        mc:Ignorable="d"
+        Title="Calculatrice" Height="450" Width="400">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="2"></Setter>
+            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="FontSize" Value="25"></Setter>
+            <Setter Property="TextAlignment" Value="Right"></Setter>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="2"></Setter>
+            <Setter Property="FontSize" Value="15"></Setter>
+            <Setter Property="Background" Value="AliceBlue"></Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+       <TextBox x:Name="tbOperation" 
+                 IsReadOnly="True"
+                 Grid.Row="0" 
+                 Grid.Column="0" 
+                 Grid.ColumnSpan="5" 
+                 Foreground="SlateGray" 
+                 Background="Gainsboro" 
+                 BorderBrush="SlateGray"/>
+
+        <TextBox x:Name="tbResultat" 
+                 IsReadOnly="True"
+                 Grid.Row="1" 
+                 Grid.Column="0" 
+                 Grid.ColumnSpan="5" 
+                 BorderBrush="SlateGray"/>
+
+        <Button x:Name="bt7" Grid.Row="2" Grid.Column="0" Click="btChiffre_Click">7</Button>
+        <Button x:Name="bt8" Grid.Row="2" Grid.Column="1" Click="btChiffre_Click">8</Button>
+        <Button x:Name="bt9" Grid.Row="2" Grid.Column="2" Click="btChiffre_Click">9</Button>
+        <Button x:Name="btDiviser" Grid.Row="2" Grid.Column="3" Click="btDiviser_Click">/</Button>
+        <Button x:Name="btEffacerDernierChar" ToolTip="Effacer la dernière saisie" Grid.Row="2" Grid.Column="4" Click="btEffacerDerniereSaisie_Click">&lt;-</Button>
+
+        <Button x:Name="bt4" Grid.Row="3" Grid.Column="0" Click="btChiffre_Click">4</Button>
+        <Button x:Name="bt5" Grid.Row="3" Grid.Column="1" Click="btChiffre_Click">5</Button>
+        <Button x:Name="bt6" Grid.Row="3" Grid.Column="2" Click="btChiffre_Click">6</Button>
+        <Button x:Name="btMultiplier" Grid.Row="3" Grid.Column="3" Click="btMultiplier_Click">*</Button>
+        <Button x:Name="btToutEffacer" ToolTip="Réinitialiser"  Grid.Row="3" Grid.Column="4" Click="btToutEffacer_Click">C</Button>
+
+        <Button x:Name="bt1" Grid.Row="4" Grid.Column="0" Click="btChiffre_Click">1</Button>
+        <Button x:Name="bt2" Grid.Row="4" Grid.Column="1" Click="btChiffre_Click">2</Button>
+        <Button x:Name="bt3" Grid.Row="4" Grid.Column="2" Click="btChiffre_Click">3</Button>
+        <Button x:Name="btSoustraire" Grid.Row="4" Grid.Column="3" Click="btSoustraire_Click">-</Button>
+
+        <Button x:Name="btPositifOuNegatif" Grid.Row="5" Grid.Column="0" Click="btChiffre_Click">+/-</Button>
+        <Button x:Name="bt0" Grid.Row="5" Grid.Column="1" Click="btChiffre_Click">0</Button>
+        <Button x:Name="btDecimal" Grid.Row="5" Grid.Column="2" Click="btChiffre_Click">,</Button>
+        <Button x:Name="btAdditionner" Grid.Row="5" Grid.Column="3" Click="btAdditionner_Click">+</Button>
+
+        <Button x:Name="btCalculerResultat" Grid.Row="4" Grid.RowSpan="2" Grid.Column="4" Background="#FF7BB7F1" Click="btCalculerResultat_Click">=</Button>
+
+    </Grid>
+</Window>
