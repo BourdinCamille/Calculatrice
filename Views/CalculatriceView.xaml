@@ -4,9 +4,193 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Calculatrice.Views"
+        xmlns:viewmodels="clr-namespace:Calculatrice.ViewModels" 
+        d:DataContext="{d:DesignInstance Type=viewmodels:CalculatriceDc}"
         mc:Ignorable="d"
-        Title="CalculatriceView" Height="450" Width="800">
-    <Grid>
-        
+        Title="Calculatrice" Height="450" Width="400">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="2"></Setter>
+            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="FontSize" Value="25"></Setter>
+            <Setter Property="TextAlignment" Value="Right"></Setter>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="2"></Setter>
+            <Setter Property="FontSize" Value="15"></Setter>
+            <Setter Property="Background" Value="AliceBlue"></Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="TbAffichageEnCours" 
+                 IsReadOnly="True"
+                 Grid.Row="0" 
+                 Grid.Column="0" 
+                 Grid.ColumnSpan="5" 
+                 Foreground="SlateGray" 
+                 Background="Gainsboro" 
+                 BorderBrush="SlateGray"
+                 Text="{Binding AffichageEnCours, Mode=TwoWay}" />
+
+        <TextBox x:Name="TbResultat" 
+                 IsReadOnly="True"
+                 Grid.Row="1" 
+                 Grid.Column="0" 
+                 Grid.ColumnSpan="5" 
+                 BorderBrush="SlateGray"
+                 Text="{Binding AffichageFinal, Mode=TwoWay}"/>
+
+        <Button x:Name="bt7" 
+                Grid.Row="2" 
+                Grid.Column="0" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="7">7
+        </Button>
+
+        <Button x:Name="bt8" 
+                Grid.Row="2" 
+                Grid.Column="1" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="8">8
+        </Button>
+
+        <Button x:Name="bt9" 
+                Grid.Row="2" 
+                Grid.Column="2" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="9">9
+        </Button>
+
+        <Button x:Name="btDiviser"
+                Grid.Row="2"
+                Grid.Column="3" 
+                Command="{Binding DefinirOperateurCommand}"
+                CommandParameter="/">/
+        </Button>
+
+        <Button x:Name="btHistorique" 
+                Grid.Row="2" 
+                Grid.Column="4"
+                ToolTip="Historique des opérations">&#8634; H
+        </Button>
+
+        <Button x:Name="bt4" 
+                Grid.Row="3" 
+                Grid.Column="0" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="4">4
+        </Button>
+
+        <Button x:Name="bt5" 
+                Grid.Row="3" 
+                Grid.Column="1" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="5">5
+        </Button>
+
+        <Button x:Name="bt6" 
+                Grid.Row="3" 
+                Grid.Column="2" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="6">6
+        </Button>
+
+        <Button x:Name="btMultiplier" 
+                Grid.Row="3" 
+                Grid.Column="3" 
+                Command="{Binding DefinirOperateurCommand}" 
+                CommandParameter="*">*
+        </Button>
+
+        <Button x:Name="btReinitialiser" 
+                Grid.Row="3" 
+                Grid.Column="4" 
+                ToolTip="Réinitialiser"  
+                Command="{Binding ReinitialiserCommand}" 
+                CommandParameter="C">C
+        </Button>
+
+        <Button x:Name="bt1" 
+                Grid.Row="4" 
+                Grid.Column="0" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="1">1
+        </Button>
+
+        <Button x:Name="bt2" 
+                Grid.Row="4" 
+                Grid.Column="1" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="2">2
+        </Button>
+
+        <Button x:Name="bt3" 
+                Grid.Row="4" 
+                Grid.Column="2" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="3">3
+        </Button>
+
+        <Button x:Name="btSoustraire"
+                Grid.Row="4" 
+                Grid.Column="3" 
+                Command="{Binding DefinirOperateurCommand}" 
+                CommandParameter="-">-
+        </Button>
+
+        <Button x:Name="btChangerSigneOperande" 
+                Grid.Row="5" 
+                Grid.Column="0" 
+                Command="{Binding ChangerSigneOperandeCommand}" 
+                CommandParameter="+/-">+/-
+        </Button>
+
+        <Button x:Name="bt0" 
+                Grid.Row="5" 
+                Grid.Column="1" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter="0">0
+        </Button>
+
+        <Button x:Name="btDecimal" 
+                Grid.Row="5" 
+                Grid.Column="2" 
+                Command="{Binding AjouterChiffreCommand}" 
+                CommandParameter=",">,
+        </Button>
+
+        <Button x:Name="btAdditionner" 
+                Grid.Row="5" 
+                Grid.Column="3" 
+                Command="{Binding DefinirOperateurCommand}" 
+                CommandParameter="+">+
+        </Button>
+
+        <Button x:Name="btCalculerResultat" 
+                Grid.Row="4" 
+                Grid.RowSpan="2" 
+                Grid.Column="4"
+                Background="#FF7BB7F1"
+                Command="{Binding CalculerResultatCommand}" 
+                CommandParameter="=">=
+        </Button>
+
     </Grid>
 </Window>

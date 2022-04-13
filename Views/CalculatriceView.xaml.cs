@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Calculatrice.ViewModels;
 
 namespace Calculatrice.Views
 {
@@ -22,6 +23,7 @@ namespace Calculatrice.Views
         public CalculatriceView()
         {
             InitializeComponent();
+            DataContext = new CalculatriceDc();
         }
     }
 }
