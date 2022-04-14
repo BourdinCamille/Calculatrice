@@ -60,21 +60,21 @@
         <Button x:Name="bt7" 
                 Grid.Row="2" 
                 Grid.Column="0" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="7">7
         </Button>
 
         <Button x:Name="bt8" 
                 Grid.Row="2" 
                 Grid.Column="1" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="8">8
         </Button>
 
         <Button x:Name="bt9" 
                 Grid.Row="2" 
                 Grid.Column="2" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="9">9
         </Button>
 
@@ -94,21 +94,21 @@
         <Button x:Name="bt4" 
                 Grid.Row="3" 
                 Grid.Column="0" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="4">4
         </Button>
 
         <Button x:Name="bt5" 
                 Grid.Row="3" 
                 Grid.Column="1" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="5">5
         </Button>
 
         <Button x:Name="bt6" 
                 Grid.Row="3" 
                 Grid.Column="2" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="6">6
         </Button>
 
@@ -130,21 +130,21 @@
         <Button x:Name="bt1" 
                 Grid.Row="4" 
                 Grid.Column="0" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="1">1
         </Button>
 
         <Button x:Name="bt2" 
                 Grid.Row="4" 
                 Grid.Column="1" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="2">2
         </Button>
 
         <Button x:Name="bt3" 
                 Grid.Row="4" 
                 Grid.Column="2" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="3">3
         </Button>
 
@@ -165,14 +165,14 @@
         <Button x:Name="bt0" 
                 Grid.Row="5" 
                 Grid.Column="1" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter="0">0
         </Button>
 
         <Button x:Name="btDecimal" 
                 Grid.Row="5" 
                 Grid.Column="2" 
-                Command="{Binding AjouterChiffreCommand}" 
+                Command="{Binding AjouterChiffreOuVirguleCommand}" 
                 CommandParameter=",">,
         </Button>
 

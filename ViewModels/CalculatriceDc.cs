@@ -8,13 +8,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Calculatrice.Commands;
 using Calculatrice.Models;
+using Calculatrice.Models.Moteur;
 
 namespace Calculatrice.ViewModels
 {
     // TO-DO :
-    // - résoudre le comportement WTF quand je clique sur un chiffre après avoir cliqué sur le bouton =
     // - coder le corps des méthodes Can...
     // - gestion des exceptions en créant une classe dédiée
+    // - gérer les références nulles
     // - gérer les exposants des chiffres trop longs
     // - écrire des TU
     public class CalculatriceDc : ViewModelBase
@@ -50,6 +51,15 @@ namespace Calculatrice.ViewModels
         }
 
         /// <summary>
+        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
+        /// pas avoir à refaire la conversion à chaque fois.
+        /// </summary>
+        public double OperandeUnDouble
+        {
+            get => double.Parse(OperandeUnVm);
+        }
+
+        /// <summary>
         /// Dans le set, on effectue la conversion vers le modèle uniquement si le dernier char de l'opérande n'est pas une virgule, sinon ça plante.
         /// Le traitement de ce cas de figure se fait dans la méthode <c>AjouterChiffreOuVirgule</c> et au moyen du booléen <c>IsDecimaleNonTraitee</c>
         /// </summary>
@@ -73,6 +83,15 @@ namespace Calculatrice.ViewModels
                     _Calculatrice.OperandeDeux = 0.0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
+        /// pas avoir à refaire la conversion à chaque fois.
+        /// </summary>
+        public double OperandeDeuxDouble
+        {
+            get => double.Parse(OperandeDeuxVm);
         }
 
         /// <summary>
@@ -112,6 +131,15 @@ namespace Calculatrice.ViewModels
         }
 
         /// <summary>
+        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
+        /// pas avoir à refaire la conversion à chaque fois.
+        /// </summary>
+        public double ResultatDouble
+        {
+            get => double.Parse(ResultatVm);
+        }
+
+        /// <summary>
         /// Ce booléen est un marqueur qui va permettre d'appeler la méthode <c>CaculerResultat</c> s'il s'agit du premier clic sur le bouton = pour une nouvelle opération ou bien d'appeler la méthode <c>CalculerResultatClicsConsecutifsSurBtEgal</c> si ces clics sont cumulés. Il va également permettre de réinitaliser l'opération si l'utilisateur clique sur un chiffre après avoir cliqué sur le bouton =.
         /// </summary>
         public bool IsBtEgalDejaClique { get; set; }
@@ -146,11 +174,10 @@ namespace Calculatrice.ViewModels
             }
         }
 
-        public ICommand AjouterChiffreCommand { get; }
+        public ICommand AjouterChiffreOuVirguleCommand { get; }
         public ICommand DefinirOperateurCommand { get; }
         public ICommand CalculerResultatCommand { get; }
         public ICommand ReinitialiserCommand { get; }
-
         public ICommand ChangerSigneOperandeCommand { get; }
 
         public CalculatriceDc()
@@ -164,7 +191,7 @@ namespace Calculatrice.ViewModels
             IsBtEgalDejaClique = false;
             _AffichageEnCours = String.Empty;
             _AffichageFinal = String.Empty;
-            AjouterChiffreCommand = new CommandBase<string>(AjouterChiffreOuVirgule, CanAjouterChiffreOuVirgule);
+            AjouterChiffreOuVirguleCommand = new CommandBase<string>(AjouterChiffreOuVirgule, CanAjouterChiffreOuVirgule);
             DefinirOperateurCommand = new CommandBase<string>(DefinirOperateur, CanDefinirOperateur);
             CalculerResultatCommand = new NoParameterCommand(CalculerResultat, CanCalculerResultat);
             ReinitialiserCommand = new NoParameterCommand(Reinitialiser, CanReinitialiser);
@@ -236,7 +263,7 @@ namespace Calculatrice.ViewModels
 
                         AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
                     }
-                    ResultatVm = _Calculatrice.CalculerResultat().ToString();
+                    ResultatVm = Calcul.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
                     IsBtEgalDejaClique = false;
                     AffichageFinal = ResultatVm;
                     break;
@@ -249,8 +276,7 @@ namespace Calculatrice.ViewModels
         }
         public void DefinirOperateur(string operateur)
         {
-            /* Au cas où l'utilisateur aurait cliqué sur la virgule juste avant de cliquer sur l'opérateur, on empêche le "transfert" de la virgule comme premier
-             caractère du deuxième opérande.*/
+            /* Au cas où l'utilisateur aurait cliqué sur la virgule juste avant de cliquer sur l'opérateur, on empêche le "transfert" de la virgule comme premier caractère du deuxième opérande.*/
             IsDecimaleNonTraitee = false;
             if (OperateurVm == EnumOperateur.Aucun)
             {
@@ -302,17 +328,16 @@ namespace Calculatrice.ViewModels
         {
             if (IsBtEgalDejaClique == false)
             {
-                ResultatVm = _Calculatrice.CalculerResultat().ToString();
+                ResultatVm = Calcul.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
                 AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
-                AffichageFinal = ResultatVm;
                 IsBtEgalDejaClique = true;
             }
             else
             {
-                ResultatVm = _Calculatrice.CalculerResultatClicsConsecutifsSurBtEgal().ToString();
+                ResultatVm = Calcul.Calculer(ResultatDouble, OperandeDeuxDouble, OperateurVm).ToString();
                 AffichageEnCours = (char)OperateurVm + OperandeDeuxVm;
-                AffichageFinal = ResultatVm;
             }
+            AffichageFinal = ResultatVm;
         }
 
         public bool CanReinitialiser()
@@ -362,7 +387,7 @@ namespace Calculatrice.ViewModels
                 }
                 AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
             }
-            ResultatVm = _Calculatrice.CalculerResultat().ToString();
+            ResultatVm = Calcul.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
             AffichageFinal = ResultatVm;
 
         }
