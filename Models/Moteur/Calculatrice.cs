@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Calculatrice.Models.Moteur
 {
-    public static class Calcul
+    public static class Calculatrice
     {
         /// <summary>
         /// Cette méthode est appelée à chaque fois que l'on rajoute un chiffre côté VM.

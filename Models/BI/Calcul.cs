@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace Calculatrice.Models
 {
@@ -10,7 +11,8 @@ namespace Calculatrice.Models
     /// Les variables numériques sont initialisées à null car au moment de faire le calcul, on va vérifier que les opérandes contiennent bien une valeur.
     /// Or, on veut que 0 puisse être considéré comme une valeur à part entière.
     /// </summary>
-    public class Calculatrice
+    [Serializable]
+    public class Calcul
     {
         public double? OperandeUn { get; set; } = null;
 
@@ -20,8 +22,20 @@ namespace Calculatrice.Models
 
         public double? Resultat { get; set; } = null;
 
-        public Calculatrice()
-        { }
+        public Calcul()
+        {}
+
+        /// <summary>
+        /// On surcharge le constructeur pour permettre de copier un calcul existant sans conserver sa référence.
+        /// </summary>
+        /// <param name="calcul"></param>
+        public Calcul(Calcul calcul)
+        {
+            this.OperandeUn = calcul.OperandeUn;
+            this.OperandeDeux = calcul.OperandeDeux;
+            this.Operateur = calcul.Operateur;
+            this.Resultat = calcul.Resultat;
+        }
 
     }
 }

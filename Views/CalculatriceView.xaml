@@ -5,9 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Calculatrice.Views"
         xmlns:viewmodels="clr-namespace:Calculatrice.ViewModels" 
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         d:DataContext="{d:DesignInstance Type=viewmodels:CalculatriceDc}"
         mc:Ignorable="d"
         Title="Calculatrice" Height="450" Width="400">
+    <!-- Implémentation du NuGet Package Microsoft Xaml Behaviors afin de pouvoir relier l'event fermeture de la fenêtre à une Commande -->
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding FermerEtSauverHistoriqueCommand }"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Window.Resources>
         <Style TargetType="TextBox">
             <Setter Property="Margin" Value="2"></Setter>
@@ -47,7 +54,7 @@
                  Foreground="SlateGray" 
                  Background="Gainsboro" 
                  BorderBrush="SlateGray"
-                 Text="{Binding AffichageEnCours, Mode=TwoWay}" />
+                 Text="{Binding AffichageEnCours, Mode=TwoWay}"/>
 
         <TextBox x:Name="TbResultat" 
                  IsReadOnly="True"
@@ -88,6 +95,7 @@
         <Button x:Name="btHistorique" 
                 Grid.Row="2" 
                 Grid.Column="4"
+                Command="{Binding AccederHistoriqueCommand}"
                 ToolTip="Historique des opérations">&#8634; H
         </Button>
 

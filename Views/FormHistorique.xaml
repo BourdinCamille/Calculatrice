@@ -1,0 +1,47 @@
+﻿<Window x:Class="Calculatrice.Views.FormHistorique"
+        x:Name="HistoriqueWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Calculatrice.Views"
+        xmlns:viewModels="clr-namespace:Calculatrice.ViewModels"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        d:DataContext="{d:DesignInstance Type=viewModels:HistoriqueDC}"
+        mc:Ignorable="d"
+        Title="Historique des calculs" Height="450" Width="400"
+        WindowStartupLocation="CenterScreen">
+    <!-- Implémentation du NuGet Package Microsoft Xaml Behaviors afin de pouvoir relier des Events à une Commande -->
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding FermerEtSauverHistoriqueCommand}"/>
+        </i:EventTrigger>
+        <i:EventTrigger EventName="MouseDoubleClick">
+            <i:InvokeCommandAction Command="{Binding RecupererSelectionCommand}" CommandParameter="{Binding SelectedCalcul}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid Margin="10">
+        <ListView ItemsSource="{Binding Historique}" SelectedItem="{Binding SelectedCalcul}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Opérande 1" Width="95" DisplayMemberBinding="{Binding OperandeUn}"/>
+                    <GridViewColumn Header="Opération" Width="95">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Operateur}" FontWeight="Bold"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    <GridViewColumn Header="Opérande 2" Width="95" DisplayMemberBinding="{Binding OperandeDeux}"/>
+                    <GridViewColumn Header="Résultat" Width="95">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Resultat}" Foreground="Red"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+    </Grid>
+</Window>
