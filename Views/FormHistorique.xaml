@@ -7,6 +7,8 @@
         xmlns:local="clr-namespace:Calculatrice.Views"
         xmlns:viewModels="clr-namespace:Calculatrice.ViewModels"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        xmlns:models="clr-namespace:Calculatrice.Models"
         d:DataContext="{d:DesignInstance Type=viewModels:HistoriqueDC}"
         mc:Ignorable="d"
         Title="Historique des calculs" Height="450" Width="400"
@@ -17,31 +19,29 @@
             <i:InvokeCommandAction Command="{Binding FermerEtSauverHistoriqueCommand}"/>
         </i:EventTrigger>
         <i:EventTrigger EventName="MouseDoubleClick">
-            <i:InvokeCommandAction Command="{Binding RecupererSelectionCommand}" CommandParameter="{Binding SelectedCalcul}"/>
+            <i:InvokeCommandAction Command="{Binding UtiliserResultatSelectionCommeOperandeCommand}" CommandParameter="{Binding SelectedCalcul}"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
+    <Window.Resources>
+        <Style x:Key="TbHistorique" TargetType="{x:Type TextBlock}" >
+            <Setter Property="Width" Value="auto"></Setter>
+            <Setter Property="Margin" Value="0,0,5,0"></Setter>
+            <Setter Property="FontSize" Value="14"></Setter>
+        </Style>
+    </Window.Resources>
     <Grid Margin="10">
-        <ListView ItemsSource="{Binding Historique}" SelectedItem="{Binding SelectedCalcul}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Opérande 1" Width="95" DisplayMemberBinding="{Binding OperandeUn}"/>
-                    <GridViewColumn Header="Opération" Width="95">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Operateur}" FontWeight="Bold"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    <GridViewColumn Header="Opérande 2" Width="95" DisplayMemberBinding="{Binding OperandeDeux}"/>
-                    <GridViewColumn Header="Résultat" Width="95">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Resultat}" Foreground="Red"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
+        <ListView ItemsSource="{Binding DixDerniersCalculs, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedCalcul}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <WrapPanel Width="auto">
+                        <TextBlock Style="{StaticResource TbHistorique}" Text="{Binding OperandeUn}"/>
+                        <TextBlock Style="{StaticResource TbHistorique}" Text="{Binding OperateurChar}" FontWeight="ExtraBold"/>
+                        <TextBlock Style="{StaticResource TbHistorique}" Text="{Binding OperandeDeux}"/>
+                        <TextBlock Style="{StaticResource TbHistorique}" Text="=" FontWeight="ExtraBold"/>
+                        <TextBlock Style="{StaticResource TbHistorique}" Text="{Binding Resultat}" Foreground="Red"/>
+                    </WrapPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Window>

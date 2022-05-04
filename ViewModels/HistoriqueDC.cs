@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using Calculatrice.Commands;
 using Calculatrice.Helpers;
@@ -19,12 +20,27 @@ namespace Calculatrice.ViewModels
     {
         private ObservableCollection<OperationVM> _Historique;
 
+        private OperationVM _SelectedCalcul;
+
+        private CalculatriceDc _CalculatriceDc;
+
+        public HistoriqueDC(CalculatriceDc calculatriceDc)
+        {
+            _CalculatriceDc = calculatriceDc;
+            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM());
+            IsOperandeFromHistorique = false;
+            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
+            UtiliserResultatSelectionCommeOperandeCommand = new CommandBase<OperationVM>(UtiliserResultatSelectionCommeOperande, CanUtiliserResultatSelectionCommeOperande);
+        }
         public ObservableCollection<OperationVM> Historique
         {
             get => _Historique;
         }
 
-        private OperationVM _SelectedCalcul;
+        public ObservableCollection<OperationVM> DixDerniersCalculs
+        {
+            get => new ObservableCollection<OperationVM>(_Historique.TakeLast(10));
+        }
 
         public OperationVM SelectedCalcul
         {
@@ -36,16 +52,11 @@ namespace Calculatrice.ViewModels
             }
         }
 
+        public bool IsOperandeFromHistorique { get; set; }
+
         public ICommand FermerEtSauverHistoriqueCommand { get; }
 
-        public ICommand RecupererSelectionCommand { get; }
-
-        public HistoriqueDC()
-        {
-            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM());
-            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
-            RecupererSelectionCommand = new CommandBase<OperationVM>(RecupererSelection, CanRecupererSelection);
-        }
+        public ICommand UtiliserResultatSelectionCommeOperandeCommand { get; }
 
         /// <summary>
         /// Création d'une nouvelle instance dans la méthode Add pour éviter l'ajout de la même référence à chaque fois.
@@ -53,14 +64,19 @@ namespace Calculatrice.ViewModels
         /// <param name="calcul"></param>
         public void EnregistrerCalcul(Calcul calcul)
         {
-            _Historique.Add(new OperationVM(calcul));
+            if (calcul.Operateur != EnumOperateur.Aucun)
+            {
+                _Historique.Add(new OperationVM(calcul));
+                DixDerniersCalculs.Add(new OperationVM(calcul));
+            }
         }
 
-        public IEnumerable<OperationVM> GetListeOperationVM()
+        private IEnumerable<OperationVM> GetListeOperationVM()
         {
             // Pour chaque élément récupéré dans la liste de Calculs (objet BI), on crée une nouvelle OperationVM (objet VM) à partir de 
             // l'objet BI. Est-ce que la conversion de List vers IEnumerable est implicite ?
             return Persistance.RecupererHistorique().Select(c => new OperationVM(c));
+            //return Persistance.RecupererHistorique().TakeLast(10).Select(c => new OperationVM(c));
 
             // Equivalent :
             //foreach (var calcul in Persistance.RecupererHistorique())
@@ -86,14 +102,40 @@ namespace Calculatrice.ViewModels
             }
         }
 
-        public bool CanRecupererSelection(OperationVM CalculSelectionne)
+        public bool CanUtiliserResultatSelectionCommeOperande(OperationVM CalculSelectionne)
         {
             return true;
         }
 
-        public void RecupererSelection(OperationVM CalculSelectionne)
+        public void UtiliserResultatSelectionCommeOperande(OperationVM CalculSelectionne)
         {
-            MessageBox.Show(CalculSelectionne.Resultat.ToString());
+            if (_CalculatriceDc is not null)
+            {
+                if (_CalculatriceDc.IsBtEgalDejaClique)
+                {
+                    _CalculatriceDc.Reinitialiser();
+                    _CalculatriceDc.OperandeUnVm = CalculSelectionne.Resultat.ToString();
+                    _CalculatriceDc.AffichageEnCours = _CalculatriceDc.OperandeUnVm;
+                }
+                else
+                {
+                    if (_CalculatriceDc.OperateurVm == EnumOperateur.Aucun)
+                    {
+                        _CalculatriceDc.OperandeUnVm = CalculSelectionne.Resultat.ToString();
+                        _CalculatriceDc.AffichageEnCours = _CalculatriceDc.OperandeUnVm;
+                    }
+                    else
+                    {
+                        _CalculatriceDc.OperandeDeuxVm = CalculSelectionne.Resultat.ToString();
+                        _CalculatriceDc.AffichageEnCours = _CalculatriceDc.OperandeUnVm + (char)_CalculatriceDc.OperateurVm + _CalculatriceDc.OperandeDeuxVm;
+                    }
+                    IsOperandeFromHistorique = true;
+                    _CalculatriceDc.ResultatVm = Models.Moteur.Calculatrice.Calculer(_CalculatriceDc.OperandeUnDouble, _CalculatriceDc.OperandeDeuxDouble, _CalculatriceDc.OperateurVm).ToString();
+                    EnregistrerCalcul(_CalculatriceDc.Calcul);
+                    _CalculatriceDc.IsBtEgalDejaClique = false;
+                    _CalculatriceDc.AffichageFinal = _CalculatriceDc.ResultatVm;
+                }
+            }
         }
 
 

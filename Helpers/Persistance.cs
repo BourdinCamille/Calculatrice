@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Calculatrice.Models;
 
 namespace Calculatrice.Helpers
@@ -12,6 +13,15 @@ namespace Calculatrice.Helpers
     public static class Persistance
     {
         private static string _CheminFichierHistorique = @"C:\Users\cbourdin\Documents\Calculatrice\CalculsHistorises.xml";
+
+        //public static void SauvegarderHistorique(IEnumerable<Calcul> historiqueAAjouter)
+        //{
+        //    var historique = RecupererHistorique();
+
+        //    historique.AddRange(historiqueAAjouter);
+
+        //    DataSerializer.XmlSerialize(typeof(List<Calcul>), historique, _CheminFichierHistorique);
+        //}
 
         public static void SauvegarderHistorique(List<Calcul> historique)
         {

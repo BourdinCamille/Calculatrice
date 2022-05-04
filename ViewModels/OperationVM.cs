@@ -37,6 +37,14 @@ namespace Calculatrice.ViewModels
             get => CalculModel.Operateur;
         }
 
+        /// <summary>
+        /// Cette propriété sert à afficher la valeur de l'EnumOperateur dans la vue.
+        /// </summary>
+        public char OperateurChar
+        {
+            get => (char) CalculModel.Operateur;
+        }
+
         public double? Resultat
         {
             get => CalculModel.Resultat;

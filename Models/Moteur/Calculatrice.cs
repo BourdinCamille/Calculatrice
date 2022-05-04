@@ -50,6 +50,34 @@ namespace Calculatrice.Models.Moteur
             }
         }
 
+        /// <summary>
+        /// Cette méthode sert à faire des comparaisons d'objets par valeur au lieu de le faire par référence comme c'est le cas par défaut.
+        /// </summary>
+        /// <param name="calcul1"></param>
+        /// <param name="calcul2"></param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public static bool HasValeursIdentiques(Calcul calcul1, Calcul calcul2)
+        {
+            if (calcul1 != null && calcul2 != null)
+            {
+                if (calcul1.OperandeUn == calcul2.OperandeUn &&
+                    calcul1.Operateur == calcul2.Operateur &&
+                    calcul1.OperandeDeux == calcul2.OperandeDeux)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                throw new NullReferenceException();
+            }
+        }
+
         // TO-DO : repenser la validation - possibilité de passer un type générique ?
         /*public static bool ValiderOperande(double operande)
         {

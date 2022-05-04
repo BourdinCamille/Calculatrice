@@ -21,7 +21,7 @@ namespace Calculatrice.Commands
 
         public bool CanExecute(object? parameter)
         {
-            return true;
+            return CanExecuterMethode((T)parameter);
         }
 
         public void Execute(object? parameter)
@@ -29,6 +29,10 @@ namespace Calculatrice.Commands
             ExecuterMethode((T)parameter);
         }
 
-        public event EventHandler? CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
     }
 }

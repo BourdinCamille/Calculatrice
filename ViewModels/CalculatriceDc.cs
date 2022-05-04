@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ using Calculatrice.Views;
 namespace Calculatrice.ViewModels
 {
     // TO-DO :
+    // - empêcher la concaténation d'un opérande issu de l'historique avec une entrée depuis la calculatrice !! (voir CanAjouterChiffreOuVirgule)
     // - coder le corps des méthodes Can...
     // - gestion des exceptions en créant une classe dédiée
     // - gérer les références nulles
@@ -25,6 +27,31 @@ namespace Calculatrice.ViewModels
         private Calcul _calcul;
 
         private HistoriqueDC _HistoriqueDC;
+
+        private string _AffichageEnCours;
+
+        private string _AffichageFinal;
+
+        public CalculatriceDc()
+        {
+            _calcul = new Calcul();
+            _HistoriqueDC = new HistoriqueDC(this);
+            OperandeUnVm = String.Empty;
+            OperandeDeuxVm = String.Empty;
+            IsDecimaleNonTraitee = false;
+            OperateurVm = EnumOperateur.Aucun;
+            ResultatVm = String.Empty;
+            IsBtEgalDejaClique = false;
+            _AffichageEnCours = String.Empty;
+            _AffichageFinal = String.Empty;
+            AjouterChiffreOuVirguleCommand = new CommandBase<string>(AjouterChiffreOuVirgule, CanAjouterChiffreOuVirgule);
+            DefinirOperateurCommand = new CommandBase<string>(DefinirOperateur, CanDefinirOperateur);
+            CalculerResultatCommand = new NoParameterCommand(CalculerResultat, CanCalculerResultat);
+            ReinitialiserCommand = new NoParameterCommand(Reinitialiser, CanReinitialiser);
+            ChangerSigneOperandeCommand = new NoParameterCommand(ChangerSigneOperande, CanChangerSigneOperande);
+            AccederHistoriqueCommand = new NoParameterCommand(AccederHistorique, CanAccederHistorique);
+            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
+        }
 
         // On crée des champs correspondant à ceux du modèle et on les lie au moyen des get / set.
 
@@ -51,6 +78,7 @@ namespace Calculatrice.ViewModels
                 {
                     _calcul.OperandeUn = 0.0;
                 }
+                OnPropertyChanged(nameof(OperandeUnVm));
             }
         }
 
@@ -86,6 +114,7 @@ namespace Calculatrice.ViewModels
                 {
                     _calcul.OperandeDeux = 0.0;
                 }
+                OnPropertyChanged(nameof(OperandeDeuxVm));
             }
         }
 
@@ -97,11 +126,6 @@ namespace Calculatrice.ViewModels
         {
             get => double.Parse(OperandeDeuxVm);
         }
-
-        /// <summary>
-        /// Ce booléen est un marqueur qui indique que la virgule est en cours d'ajout dans une opérande.
-        /// </summary>
-        public bool IsDecimaleNonTraitee { get; set; }
 
         public EnumOperateur OperateurVm
         {
@@ -131,6 +155,7 @@ namespace Calculatrice.ViewModels
                 {
                     _calcul.Resultat = 0.0;
                 }
+                OnPropertyChanged(nameof(ResultatVm));
             }
         }
 
@@ -148,7 +173,10 @@ namespace Calculatrice.ViewModels
         /// </summary>
         public bool IsBtEgalDejaClique { get; set; }
 
-        private string _AffichageEnCours;
+        /// <summary>
+        /// Ce booléen est un marqueur qui indique que la virgule est en cours d'ajout dans une opérande.
+        /// </summary>
+        public bool IsDecimaleNonTraitee { get; set; }
 
         public string AffichageEnCours
         {
@@ -163,7 +191,10 @@ namespace Calculatrice.ViewModels
             }
         }
 
-        private string _AffichageFinal;
+        public Calcul Calcul
+        {
+            get => _calcul;
+        }
 
         public string AffichageFinal
         {
@@ -186,30 +217,9 @@ namespace Calculatrice.ViewModels
         public ICommand AccederHistoriqueCommand { get; }
         public ICommand FermerEtSauverHistoriqueCommand { get; }
 
-        public CalculatriceDc()
-        {
-            _calcul = new Calcul();
-            _HistoriqueDC = new HistoriqueDC();
-            OperandeUnVm = String.Empty;
-            OperandeDeuxVm = String.Empty;
-            IsDecimaleNonTraitee = false;
-            OperateurVm = EnumOperateur.Aucun;
-            ResultatVm = String.Empty;
-            IsBtEgalDejaClique = false;
-            _AffichageEnCours = String.Empty;
-            _AffichageFinal = String.Empty;
-            AjouterChiffreOuVirguleCommand = new CommandBase<string>(AjouterChiffreOuVirgule, CanAjouterChiffreOuVirgule);
-            DefinirOperateurCommand = new CommandBase<string>(DefinirOperateur, CanDefinirOperateur);
-            CalculerResultatCommand = new NoParameterCommand(CalculerResultat, CanCalculerResultat);
-            ReinitialiserCommand = new NoParameterCommand(Reinitialiser, CanReinitialiser);
-            ChangerSigneOperandeCommand = new NoParameterCommand(ChangerSigneOperande, CanChangerSigneOperande);
-            AccederHistoriqueCommand = new NoParameterCommand(AccederHistorique, CanAccederHistorique);
-            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
-        }
-
         private bool CanAjouterChiffreOuVirgule(string chiffreOuVirgule)
         {
-            return true;
+            return !_HistoriqueDC.IsOperandeFromHistorique;
         }
 
         private void AjouterChiffreOuVirgule(string chiffreOuVirgule)
@@ -331,6 +341,7 @@ namespace Calculatrice.ViewModels
                         break;
                 }
             }
+            _HistoriqueDC.IsOperandeFromHistorique = false;
         }
 
         public bool CanCalculerResultat()
@@ -340,20 +351,38 @@ namespace Calculatrice.ViewModels
 
         public void CalculerResultat()
         {
-            if (IsBtEgalDejaClique == false)
+            if (OperateurVm != EnumOperateur.Aucun)
             {
-                ResultatVm = Models.Moteur.Calculatrice.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
-                _HistoriqueDC.EnregistrerCalcul(_calcul);
-                AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
-                IsBtEgalDejaClique = true;
+                if (IsBtEgalDejaClique == false)
+                {
+                    ResultatVm = Models.Moteur.Calculatrice.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
+
+                    // On récupère le dernier calcul de l'historique et on le compare avec celui qui vient d'être réalisé.S'ils sont identiques on ne persiste pas deux fois.
+                    OperationVM lastOpVm = _HistoriqueDC.Historique.Last();
+                    Calcul lastCalcul = lastOpVm.CalculModel;
+
+                    if (!Models.Moteur.Calculatrice.HasValeursIdentiques(_calcul, lastCalcul))
+                    {
+                        _HistoriqueDC.EnregistrerCalcul(_calcul);
+                    }
+                    AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
+                    IsBtEgalDejaClique = true;
+                }
+                else
+                {
+                    OperandeUnVm = ResultatVm;
+                    ResultatVm = Models.Moteur.Calculatrice.Calculer(ResultatDouble, OperandeDeuxDouble, OperateurVm).ToString();
+                    _HistoriqueDC.EnregistrerCalcul(_calcul);
+                    AffichageEnCours = (char)OperateurVm + OperandeDeuxVm;
+                }
+                _HistoriqueDC.IsOperandeFromHistorique = false;
+                AffichageFinal = ResultatVm;
             }
             else
             {
-                ResultatVm = Models.Moteur.Calculatrice.Calculer(ResultatDouble, OperandeDeuxDouble, OperateurVm).ToString();
-                //_HistoriqueDC.EnregistrerCalcul(_calcul);
-                AffichageEnCours = (char)OperateurVm + OperandeDeuxVm;
+                MessageBox.Show("Pas d'opération sans opérateur !");
             }
-            AffichageFinal = ResultatVm;
+            
         }
 
         public bool CanReinitialiser()
@@ -370,6 +399,7 @@ namespace Calculatrice.ViewModels
             IsBtEgalDejaClique = false;
             AffichageEnCours = String.Empty;
             AffichageFinal = String.Empty;
+            _HistoriqueDC.IsOperandeFromHistorique = false;
         }
 
         public bool CanChangerSigneOperande()
@@ -428,6 +458,5 @@ namespace Calculatrice.ViewModels
         {
             _HistoriqueDC.FermerEtSauverHistorique();
         }
-
     }
 }

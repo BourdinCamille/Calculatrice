@@ -36,6 +36,5 @@ namespace Calculatrice.Models
             this.Operateur = calcul.Operateur;
             this.Resultat = calcul.Resultat;
         }
-
     }
 }
