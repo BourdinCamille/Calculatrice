@@ -27,18 +27,11 @@ namespace Calculatrice.GrpcClient
 
         public double EnvoyerCalculAuServeur(Calcul calcul)
         {
-            if (!(calcul.Operateur == EnumOperateurClient.Division && calcul.OperandeDeux == 0))
-            {
-                var reply = _Client.Calculer(ConvertToDto(calcul));
-                return reply.Resultat;
-            }
-            else
-            {
-                MessageBox.Show("Division par zéro impossible");
-                return (double)calcul.OperandeUn;
-            }
+            var reply = _Client.Calculer(ConvertToDto(calcul));
+            return reply.Resultat;
         }
 
+        // Cette méthode étant référencée dans au moins une autre classe, il aurait mieux valu créer une classe Conversion dans le repértoire Helpers et la placer dedans.
         public static CalculRequest ConvertToDto(Calcul calcul)
         {
             var request = new CalculRequest
@@ -50,7 +43,7 @@ namespace Calculatrice.GrpcClient
             return request;
         }
 
-        public static EnumOperateurProto ConversionOperateurFromBiToProto(Calcul calcul)
+        private static EnumOperateurProto ConversionOperateurFromBiToProto(Calcul calcul)
         {
             EnumOperateurProto operateurRequest;
 

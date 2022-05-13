@@ -21,7 +21,7 @@ namespace Calculatrice.ViewModels
 {
     public class HistoriqueDC : ViewModelBase
     {
-        private ObservableCollection<OperationVM> _Historique;
+        private ObservableCollection<OperationVM> _Historique; // probablement à supprimer car plus utilisé
 
         private ObservableCollection<OperationVM> _HistoriquePourLaVue;
 
@@ -35,7 +35,8 @@ namespace Calculatrice.ViewModels
         {
             _CalculatriceDc = calculatriceDc;
             _HistoriqueClient = new HistoriqueClient();
-            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM());
+            // N'appeler GetListeOperationVM qu'une seule fois pour ne pas surcharger le serveur inutilement.
+            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM()); // mettre dans une List<> (pas besoin d'une ObsCol puisque pas dans la vue !)
             _HistoriquePourLaVue = new ObservableCollection<OperationVM>(GetListeOperationVM().TakeLast(10));
             UtiliserResultatSelectionCommeOperandeCommand = new CommandBase<OperationVM>(UtiliserResultatSelectionCommeOperande, CanUtiliserResultatSelectionCommeOperande);
         }

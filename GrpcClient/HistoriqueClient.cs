@@ -64,6 +64,7 @@ namespace Calculatrice.GrpcClient
 
             var historique = reply.OperationsRecuperees.Select(c => ConvertirFromDtoToBi(c)).ToList();
 
+            // A éviter car le serveur est rappelé pour chaque calcul de l'historique ! Voir alternative dans historique.proto
             foreach (var calcul in historique)
             {
                 calcul.Resultat = CalculsClient.EnvoyerCalculAuServeur(calcul);
@@ -72,7 +73,7 @@ namespace Calculatrice.GrpcClient
             return historique;
         }
 
-        public static EnumOperateurClient ConversionOperateurFromDtoToBi(CalculRequest calculRequest)
+        private static EnumOperateurClient ConversionOperateurFromDtoToBi(CalculRequest calculRequest)
         {
             EnumOperateurClient operateurBi;
 

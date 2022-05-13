@@ -447,11 +447,28 @@ namespace Calculatrice.ViewModels
         {
             if (calcul.Operateur != EnumOperateur.Aucun)
             {
-                if (!(calcul.Operateur == EnumOperateur.Division && calcul.OperandeDeux == 0))
+                if (CalculIsConforme(calcul))
                 {
                     histoDc.HistoriqueClient.EnregistrerCalculSurServeur(calcul);
                     histoDc.MettreVueAJour(calcul);
                 }
+            }
+        }
+
+        /// <summary>
+        /// N'est utilisée que pour vérifier la conformité d'une divsion pour le moment, mais à développer...
+        /// </summary>
+        /// <param name="calcul"></param>
+        /// <returns></returns>
+        private bool CalculIsConforme(Calcul calcul)
+        {
+            if (!(calcul.Operateur == EnumOperateur.Division && calcul.OperandeDeux == 0))
+                return true;
+            else
+            {
+                MessageBox.Show("Division par zéro impossible");
+                Reinitialiser();
+                return false;
             }
         }
     }
