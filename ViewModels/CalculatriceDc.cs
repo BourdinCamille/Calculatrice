@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,14 +10,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Calculatrice.Commands;
+using Calculatrice.GrpcClient;
 using Calculatrice.Models;
-using Calculatrice.Models.Moteur;
 using Calculatrice.Views;
+using Grpc.Net.Client;
+using GrpcServer;
+using GrpcServer.BI;
+using EnumOperateur = Calculatrice.Models.EnumOperateur;
 
 namespace Calculatrice.ViewModels
 {
     // TO-DO :
-    // - empêcher la concaténation d'un opérande issu de l'historique avec une entrée depuis la calculatrice !! (voir CanAjouterChiffreOuVirgule)
     // - coder le corps des méthodes Can...
     // - gestion des exceptions en créant une classe dédiée
     // - gérer les références nulles
@@ -24,7 +28,9 @@ namespace Calculatrice.ViewModels
     // - écrire des TU
     public class CalculatriceDc : ViewModelBase
     {
-        private Calcul _calcul;
+        private Calcul _Calcul;
+
+        private CalculsClient _CalculsClient;
 
         private HistoriqueDC _HistoriqueDC;
 
@@ -34,11 +40,13 @@ namespace Calculatrice.ViewModels
 
         public CalculatriceDc()
         {
-            _calcul = new Calcul();
+            _Calcul = new Calcul();
+            _CalculsClient = new CalculsClient();
             _HistoriqueDC = new HistoriqueDC(this);
             OperandeUnVm = String.Empty;
             OperandeDeuxVm = String.Empty;
             IsDecimaleNonTraitee = false;
+            IsOperandeFromHistorique = false;
             OperateurVm = EnumOperateur.Aucun;
             ResultatVm = String.Empty;
             IsBtEgalDejaClique = false;
@@ -50,7 +58,6 @@ namespace Calculatrice.ViewModels
             ReinitialiserCommand = new NoParameterCommand(Reinitialiser, CanReinitialiser);
             ChangerSigneOperandeCommand = new NoParameterCommand(ChangerSigneOperande, CanChangerSigneOperande);
             AccederHistoriqueCommand = new NoParameterCommand(AccederHistorique, CanAccederHistorique);
-            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
         }
 
         // On crée des champs correspondant à ceux du modèle et on les lie au moyen des get / set.
@@ -63,7 +70,7 @@ namespace Calculatrice.ViewModels
         {
             get
             {
-                return _calcul.OperandeUn.ToString();
+                return _Calcul.OperandeUn.ToString();
             }
             set
             {
@@ -71,24 +78,15 @@ namespace Calculatrice.ViewModels
                 {
                     if (value[value.Length - 1] != ',')
                     {
-                        _calcul.OperandeUn = double.Parse(value);
+                        _Calcul.OperandeUn = double.Parse(value);
                     }
                 }
                 else
                 {
-                    _calcul.OperandeUn = 0.0;
+                    _Calcul.OperandeUn = 0.0;
                 }
                 OnPropertyChanged(nameof(OperandeUnVm));
             }
-        }
-
-        /// <summary>
-        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
-        /// pas avoir à refaire la conversion à chaque fois.
-        /// </summary>
-        public double OperandeUnDouble
-        {
-            get => double.Parse(OperandeUnVm);
         }
 
         /// <summary>
@@ -99,7 +97,7 @@ namespace Calculatrice.ViewModels
         {
             get
             {
-                return _calcul.OperandeDeux.ToString();
+                return _Calcul.OperandeDeux.ToString();
             }
             set
             {
@@ -107,35 +105,26 @@ namespace Calculatrice.ViewModels
                 {
                     if (value[value.Length - 1] != ',')
                     {
-                        _calcul.OperandeDeux = double.Parse(value);
+                        _Calcul.OperandeDeux = double.Parse(value);
                     }
                 }
                 else
                 {
-                    _calcul.OperandeDeux = 0.0;
+                    _Calcul.OperandeDeux = 0.0;
                 }
                 OnPropertyChanged(nameof(OperandeDeuxVm));
             }
-        }
-
-        /// <summary>
-        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
-        /// pas avoir à refaire la conversion à chaque fois.
-        /// </summary>
-        public double OperandeDeuxDouble
-        {
-            get => double.Parse(OperandeDeuxVm);
         }
 
         public EnumOperateur OperateurVm
         {
             get
             {
-                return _calcul.Operateur;
+                return _Calcul.Operateur;
             }
             set
             {
-                _calcul.Operateur = value;
+                _Calcul.Operateur = value;
             }
         }
 
@@ -143,29 +132,20 @@ namespace Calculatrice.ViewModels
         {
             get
             {
-                return _calcul.Resultat.ToString();
+                return _Calcul.Resultat.ToString();
             }
             set
             {
                 if (ResultatVm != "")
                 {
-                    _calcul.Resultat = double.Parse(value);
+                    _Calcul.Resultat = double.Parse(value);
                 }
                 else
                 {
-                    _calcul.Resultat = 0.0;
+                    _Calcul.Resultat = 0.0;
                 }
                 OnPropertyChanged(nameof(ResultatVm));
             }
-        }
-
-        /// <summary>
-        /// Le but de cette variable est d'être passée en paramètre quand la méthode statique <c>Calculer</c> est appelée, pour ne
-        /// pas avoir à refaire la conversion à chaque fois.
-        /// </summary>
-        public double ResultatDouble
-        {
-            get => double.Parse(ResultatVm);
         }
 
         /// <summary>
@@ -177,6 +157,8 @@ namespace Calculatrice.ViewModels
         /// Ce booléen est un marqueur qui indique que la virgule est en cours d'ajout dans une opérande.
         /// </summary>
         public bool IsDecimaleNonTraitee { get; set; }
+
+        public bool IsOperandeFromHistorique { get; set; }
 
         public string AffichageEnCours
         {
@@ -193,7 +175,12 @@ namespace Calculatrice.ViewModels
 
         public Calcul Calcul
         {
-            get => _calcul;
+            get => _Calcul;
+        }
+
+        public CalculsClient CalculsClient
+        {
+            get => _CalculsClient;
         }
 
         public string AffichageFinal
@@ -215,11 +202,10 @@ namespace Calculatrice.ViewModels
         public ICommand ReinitialiserCommand { get; }
         public ICommand ChangerSigneOperandeCommand { get; }
         public ICommand AccederHistoriqueCommand { get; }
-        public ICommand FermerEtSauverHistoriqueCommand { get; }
 
         private bool CanAjouterChiffreOuVirgule(string chiffreOuVirgule)
         {
-            return !_HistoriqueDC.IsOperandeFromHistorique;
+            return !IsOperandeFromHistorique;
         }
 
         private void AjouterChiffreOuVirgule(string chiffreOuVirgule)
@@ -282,10 +268,11 @@ namespace Calculatrice.ViewModels
 
                         AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
                     }
-                    ResultatVm = Models.Moteur.Calculatrice.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
+                    var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
+                    ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
                     if (OperateurVm != EnumOperateur.Aucun)
                     {
-                        _HistoriqueDC.EnregistrerCalcul(_calcul);
+                        EnregistrerCalculEtMettreVueAJour(_HistoriqueDC, _Calcul);
                     }
                     IsBtEgalDejaClique = false;
                     AffichageFinal = ResultatVm;
@@ -341,7 +328,7 @@ namespace Calculatrice.ViewModels
                         break;
                 }
             }
-            _HistoriqueDC.IsOperandeFromHistorique = false;
+            IsOperandeFromHistorique = false;
         }
 
         public bool CanCalculerResultat()
@@ -355,34 +342,40 @@ namespace Calculatrice.ViewModels
             {
                 if (IsBtEgalDejaClique == false)
                 {
-                    ResultatVm = Models.Moteur.Calculatrice.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
+                    var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
+                    ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
 
-                    // On récupère le dernier calcul de l'historique et on le compare avec celui qui vient d'être réalisé.S'ils sont identiques on ne persiste pas deux fois.
-                    OperationVM lastOpVm = _HistoriqueDC.Historique.Last();
-                    Calcul lastCalcul = lastOpVm.CalculModel;
-
-                    if (!Models.Moteur.Calculatrice.HasValeursIdentiques(_calcul, lastCalcul))
+                    // On récupère le dernier calcul de l'historique de la VM et on le compare avec celui qui vient d'être réalisé.S'ils sont identiques on ne l'affiche et on ne le persiste pas deux fois.
+                    if (_HistoriqueDC.HistoriquePourLaVue.Count != 0)
                     {
-                        _HistoriqueDC.EnregistrerCalcul(_calcul);
+                        OperationVM lastOpVm = _HistoriqueDC.HistoriquePourLaVue.Last();
+                        Calcul lastCalcul = lastOpVm.CalculModel;
+
+                        if (!_HistoriqueDC.HistoriqueClient.HasValeursIdentiques(_Calcul, lastCalcul))
+                        {
+                            EnregistrerCalculEtMettreVueAJour(_HistoriqueDC, _Calcul);
+                        }
                     }
                     AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
                     IsBtEgalDejaClique = true;
                 }
                 else
                 {
+                    // Dans le cas du cumul de clics sur le bouton "égal", le résultat de la dernière opération devient le premier opérande de l'opération suivante.
                     OperandeUnVm = ResultatVm;
-                    ResultatVm = Models.Moteur.Calculatrice.Calculer(ResultatDouble, OperandeDeuxDouble, OperateurVm).ToString();
-                    _HistoriqueDC.EnregistrerCalcul(_calcul);
+                    _Calcul.OperandeUn = _Calcul.Resultat;
+                    var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
+                    ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
+                    EnregistrerCalculEtMettreVueAJour(_HistoriqueDC, _Calcul);
                     AffichageEnCours = (char)OperateurVm + OperandeDeuxVm;
                 }
-                _HistoriqueDC.IsOperandeFromHistorique = false;
+                IsOperandeFromHistorique = false;
                 AffichageFinal = ResultatVm;
             }
             else
             {
                 MessageBox.Show("Pas d'opération sans opérateur !");
             }
-            
         }
 
         public bool CanReinitialiser()
@@ -399,7 +392,7 @@ namespace Calculatrice.ViewModels
             IsBtEgalDejaClique = false;
             AffichageEnCours = String.Empty;
             AffichageFinal = String.Empty;
-            _HistoriqueDC.IsOperandeFromHistorique = false;
+            IsOperandeFromHistorique = false;
         }
 
         public bool CanChangerSigneOperande()
@@ -433,7 +426,8 @@ namespace Calculatrice.ViewModels
                 }
                 AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
             }
-            ResultatVm = Models.Moteur.Calculatrice.Calculer(OperandeUnDouble, OperandeDeuxDouble, OperateurVm).ToString();
+            var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
+            ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
             AffichageFinal = ResultatVm;
 
         }
@@ -449,14 +443,17 @@ namespace Calculatrice.ViewModels
             historiqueView.Show();
         }
 
-        public bool CanFermerEtSauverHistorique()
+        public void EnregistrerCalculEtMettreVueAJour(HistoriqueDC histoDc, Calcul calcul)
         {
-            return true;
-        }
-
-        public void FermerEtSauverHistorique()
-        {
-            _HistoriqueDC.FermerEtSauverHistorique();
+            if (calcul.Operateur != EnumOperateur.Aucun)
+            {
+                if (!(calcul.Operateur == EnumOperateur.Division && calcul.OperandeDeux == 0))
+                {
+                    histoDc.HistoriqueClient.EnregistrerCalculSurServeur(calcul);
+                    histoDc.MettreVueAJour(calcul);
+                }
+            }
         }
     }
+
 }

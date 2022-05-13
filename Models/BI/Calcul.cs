@@ -11,7 +11,6 @@ namespace Calculatrice.Models
     /// Les variables numériques sont initialisées à null car au moment de faire le calcul, on va vérifier que les opérandes contiennent bien une valeur.
     /// Or, on veut que 0 puisse être considéré comme une valeur à part entière.
     /// </summary>
-    [Serializable]
     public class Calcul
     {
         public double? OperandeUn { get; set; } = null;

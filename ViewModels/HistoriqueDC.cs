@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,9 +12,10 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using Calculatrice.Commands;
-using Calculatrice.Helpers;
+using Calculatrice.GrpcClient;
 using Calculatrice.Models;
 using Calculatrice.Views;
+using GrpcServer.BI;
 
 namespace Calculatrice.ViewModels
 {
@@ -20,16 +23,20 @@ namespace Calculatrice.ViewModels
     {
         private ObservableCollection<OperationVM> _Historique;
 
+        private ObservableCollection<OperationVM> _HistoriquePourLaVue;
+
         private OperationVM _SelectedCalcul;
 
         private CalculatriceDc _CalculatriceDc;
 
+        private HistoriqueClient _HistoriqueClient;
+
         public HistoriqueDC(CalculatriceDc calculatriceDc)
         {
             _CalculatriceDc = calculatriceDc;
+            _HistoriqueClient = new HistoriqueClient();
             _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM());
-            IsOperandeFromHistorique = false;
-            FermerEtSauverHistoriqueCommand = new NoParameterCommand(FermerEtSauverHistorique, CanFermerEtSauverHistorique);
+            _HistoriquePourLaVue = new ObservableCollection<OperationVM>(GetListeOperationVM().TakeLast(10));
             UtiliserResultatSelectionCommeOperandeCommand = new CommandBase<OperationVM>(UtiliserResultatSelectionCommeOperande, CanUtiliserResultatSelectionCommeOperande);
         }
         public ObservableCollection<OperationVM> Historique
@@ -37,9 +44,9 @@ namespace Calculatrice.ViewModels
             get => _Historique;
         }
 
-        public ObservableCollection<OperationVM> DixDerniersCalculs
+        public ObservableCollection<OperationVM> HistoriquePourLaVue
         {
-            get => new ObservableCollection<OperationVM>(_Historique.TakeLast(10));
+            get => _HistoriquePourLaVue;
         }
 
         public OperationVM SelectedCalcul
@@ -52,54 +59,18 @@ namespace Calculatrice.ViewModels
             }
         }
 
-        public bool IsOperandeFromHistorique { get; set; }
-
-        public ICommand FermerEtSauverHistoriqueCommand { get; }
+        public HistoriqueClient HistoriqueClient
+        {
+            get => _HistoriqueClient;
+        }
 
         public ICommand UtiliserResultatSelectionCommeOperandeCommand { get; }
-
-        /// <summary>
-        /// Création d'une nouvelle instance dans la méthode Add pour éviter l'ajout de la même référence à chaque fois.
-        /// </summary>
-        /// <param name="calcul"></param>
-        public void EnregistrerCalcul(Calcul calcul)
-        {
-            if (calcul.Operateur != EnumOperateur.Aucun)
-            {
-                _Historique.Add(new OperationVM(calcul));
-                DixDerniersCalculs.Add(new OperationVM(calcul));
-            }
-        }
 
         private IEnumerable<OperationVM> GetListeOperationVM()
         {
             // Pour chaque élément récupéré dans la liste de Calculs (objet BI), on crée une nouvelle OperationVM (objet VM) à partir de 
             // l'objet BI. Est-ce que la conversion de List vers IEnumerable est implicite ?
-            return Persistance.RecupererHistorique().Select(c => new OperationVM(c));
-            //return Persistance.RecupererHistorique().TakeLast(10).Select(c => new OperationVM(c));
-
-            // Equivalent :
-            //foreach (var calcul in Persistance.RecupererHistorique())
-            //    yield return new OperationVM(calcul);
-        }
-
-        public bool CanFermerEtSauverHistorique()
-        {
-            return true;
-        }
-
-        public void FermerEtSauverHistorique()
-        {
-            if (_Historique != null && _Historique.Count != 0)
-            {
-                // A l'inverse de la récupération, pour chaque élément enregistré dans l'ObservableCollection, on va transformer l'OperationVM
-                // en objet BI puis convertir l'ObservableCollection en List.
-                Persistance.SauvegarderHistorique(Historique.Select(o => o.CalculModel).ToList());
-            }
-            else
-            {
-                MessageBox.Show("Aucune donnée à enregistrer");
-            }
+            return _HistoriqueClient.RecupererHistoriqueDepuisServeur().Select(c => new OperationVM(c));
         }
 
         public bool CanUtiliserResultatSelectionCommeOperande(OperationVM CalculSelectionne)
@@ -129,15 +100,29 @@ namespace Calculatrice.ViewModels
                         _CalculatriceDc.OperandeDeuxVm = CalculSelectionne.Resultat.ToString();
                         _CalculatriceDc.AffichageEnCours = _CalculatriceDc.OperandeUnVm + (char)_CalculatriceDc.OperateurVm + _CalculatriceDc.OperandeDeuxVm;
                     }
-                    IsOperandeFromHistorique = true;
-                    _CalculatriceDc.ResultatVm = Models.Moteur.Calculatrice.Calculer(_CalculatriceDc.OperandeUnDouble, _CalculatriceDc.OperandeDeuxDouble, _CalculatriceDc.OperateurVm).ToString();
-                    EnregistrerCalcul(_CalculatriceDc.Calcul);
+                    _CalculatriceDc.IsOperandeFromHistorique = true;
+
+                    var resultat = _CalculatriceDc.CalculsClient.EnvoyerCalculAuServeur(_CalculatriceDc.Calcul);
+                    _CalculatriceDc.ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
+
+                    _CalculatriceDc.EnregistrerCalculEtMettreVueAJour(this, _CalculatriceDc.Calcul); 
                     _CalculatriceDc.IsBtEgalDejaClique = false;
                     _CalculatriceDc.AffichageFinal = _CalculatriceDc.ResultatVm;
                 }
             }
         }
 
-
+        /// <summary>
+        /// Cette méthode sert uniquement à mettre la vue à jour, car chaque calcul est automatiquement envoyé au serveur et persisté mais la mise à jour de l'historique ne se fait pas en temps réel - l'historique étant récupéré uniquement au moment où l'on relance l'application.
+        /// </summary>
+        /// <param name="calcul"></param>
+        public void MettreVueAJour(Calcul calcul)
+        {
+            if (HistoriquePourLaVue.Count == 10)
+            {
+                HistoriquePourLaVue.RemoveAt(0);
+            }
+            HistoriquePourLaVue.Add(new OperationVM(calcul));
+        }
     }
 }

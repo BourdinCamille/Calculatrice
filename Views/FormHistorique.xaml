@@ -13,11 +13,8 @@
         mc:Ignorable="d"
         Title="Historique des calculs" Height="450" Width="400"
         WindowStartupLocation="CenterScreen">
-    <!-- Implémentation du NuGet Package Microsoft Xaml Behaviors afin de pouvoir relier des Events à une Commande -->
+    <!-- Implémentation du NuGet Package Microsoft Xaml Behaviors afin de pouvoir relier des Events à des Commandes -->
     <i:Interaction.Triggers>
-        <i:EventTrigger EventName="Closing">
-            <i:InvokeCommandAction Command="{Binding FermerEtSauverHistoriqueCommand}"/>
-        </i:EventTrigger>
         <i:EventTrigger EventName="MouseDoubleClick">
             <i:InvokeCommandAction Command="{Binding UtiliserResultatSelectionCommeOperandeCommand}" CommandParameter="{Binding SelectedCalcul}"/>
         </i:EventTrigger>
@@ -30,7 +27,7 @@
         </Style>
     </Window.Resources>
     <Grid Margin="10">
-        <ListView ItemsSource="{Binding DixDerniersCalculs, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedCalcul}">
+        <ListView ItemsSource="{Binding HistoriquePourLaVue, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedCalcul}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel Width="auto">
