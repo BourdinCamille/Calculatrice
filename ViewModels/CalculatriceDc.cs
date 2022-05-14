@@ -21,6 +21,7 @@ using EnumOperateur = Calculatrice.Models.EnumOperateur;
 namespace Calculatrice.ViewModels
 {
     // TO-DO :
+    // - refacto pour toute la partie allant du calcul à son enregistrement (si possible)
     // - coder le corps des méthodes Can...
     // - gestion des exceptions en créant une classe dédiée
     // - gérer les références nulles
@@ -268,14 +269,17 @@ namespace Calculatrice.ViewModels
 
                         AffichageEnCours = OperandeUnVm + (char)OperateurVm + OperandeDeuxVm;
                     }
-                    var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
-                    ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
-                    if (OperateurVm != EnumOperateur.Aucun)
+                    if(CalculIsConforme(_Calcul))
                     {
-                        EnregistrerCalculEtMettreVueAJour(_HistoriqueDC, _Calcul);
+                        var resultat = _CalculsClient.EnvoyerCalculAuServeur(_Calcul);
+                        ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
+                        if (OperateurVm != EnumOperateur.Aucun)
+                        {
+                            EnregistrerCalculEtMettreVueAJour(_HistoriqueDC, _Calcul);
+                        }
+                        IsBtEgalDejaClique = false;
+                        AffichageFinal = ResultatVm;
                     }
-                    IsBtEgalDejaClique = false;
-                    AffichageFinal = ResultatVm;
                     break;
             }
         }
@@ -338,7 +342,7 @@ namespace Calculatrice.ViewModels
 
         public void CalculerResultat()
         {
-            if (OperateurVm != EnumOperateur.Aucun)
+            if (OperateurVm != EnumOperateur.Aucun && CalculIsConforme(_Calcul))
             {
                 if (IsBtEgalDejaClique == false)
                 {
@@ -346,9 +350,9 @@ namespace Calculatrice.ViewModels
                     ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
 
                     // On récupère le dernier calcul de l'historique de la VM et on le compare avec celui qui vient d'être réalisé.S'ils sont identiques on ne l'affiche et on ne le persiste pas deux fois.
-                    if (_HistoriqueDC.HistoriquePourLaVue.Count != 0)
+                    if (_HistoriqueDC.Historique.Count != 0)
                     {
-                        OperationVM lastOpVm = _HistoriqueDC.HistoriquePourLaVue.Last();
+                        OperationVM lastOpVm = _HistoriqueDC.Historique.Last();
                         Calcul lastCalcul = lastOpVm.CalculModel;
 
                         if (!_HistoriqueDC.HistoriqueClient.HasValeursIdentiques(_Calcul, lastCalcul))
@@ -447,11 +451,8 @@ namespace Calculatrice.ViewModels
         {
             if (calcul.Operateur != EnumOperateur.Aucun)
             {
-                if (CalculIsConforme(calcul))
-                {
-                    histoDc.HistoriqueClient.EnregistrerCalculSurServeur(calcul);
-                    histoDc.MettreVueAJour(calcul);
-                }
+                histoDc.HistoriqueClient.EnregistrerCalculSurServeur(calcul);
+                histoDc.MettreVueAJour(calcul);
             }
         }
 
@@ -460,16 +461,14 @@ namespace Calculatrice.ViewModels
         /// </summary>
         /// <param name="calcul"></param>
         /// <returns></returns>
-        private bool CalculIsConforme(Calcul calcul)
+        public bool CalculIsConforme(Calcul calcul)
         {
-            if (!(calcul.Operateur == EnumOperateur.Division && calcul.OperandeDeux == 0))
-                return true;
-            else
+            if (calcul.Operateur == EnumOperateur.Division && calcul.OperandeDeux == 0)
             {
                 MessageBox.Show("Division par zéro impossible");
-                Reinitialiser();
                 return false;
             }
+            else return true;
         }
     }
 

@@ -27,7 +27,7 @@
         </Style>
     </Window.Resources>
     <Grid Margin="10">
-        <ListView ItemsSource="{Binding HistoriquePourLaVue, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedCalcul}">
+        <ListView ItemsSource="{Binding Historique, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedCalcul}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel Width="auto">

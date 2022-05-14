@@ -21,9 +21,7 @@ namespace Calculatrice.ViewModels
 {
     public class HistoriqueDC : ViewModelBase
     {
-        private ObservableCollection<OperationVM> _Historique; // probablement à supprimer car plus utilisé
-
-        private ObservableCollection<OperationVM> _HistoriquePourLaVue;
+        private ObservableCollection<OperationVM> _Historique;
 
         private OperationVM _SelectedCalcul;
 
@@ -35,19 +33,13 @@ namespace Calculatrice.ViewModels
         {
             _CalculatriceDc = calculatriceDc;
             _HistoriqueClient = new HistoriqueClient();
-            // N'appeler GetListeOperationVM qu'une seule fois pour ne pas surcharger le serveur inutilement.
-            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM()); // mettre dans une List<> (pas besoin d'une ObsCol puisque pas dans la vue !)
-            _HistoriquePourLaVue = new ObservableCollection<OperationVM>(GetListeOperationVM().TakeLast(10));
+            _Historique = new ObservableCollection<OperationVM>(GetListeOperationVM().TakeLast(10));
             UtiliserResultatSelectionCommeOperandeCommand = new CommandBase<OperationVM>(UtiliserResultatSelectionCommeOperande, CanUtiliserResultatSelectionCommeOperande);
         }
+
         public ObservableCollection<OperationVM> Historique
         {
             get => _Historique;
-        }
-
-        public ObservableCollection<OperationVM> HistoriquePourLaVue
-        {
-            get => _HistoriquePourLaVue;
         }
 
         public OperationVM SelectedCalcul
@@ -103,12 +95,15 @@ namespace Calculatrice.ViewModels
                     }
                     _CalculatriceDc.IsOperandeFromHistorique = true;
 
-                    var resultat = _CalculatriceDc.CalculsClient.EnvoyerCalculAuServeur(_CalculatriceDc.Calcul);
-                    _CalculatriceDc.ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
+                    if(_CalculatriceDc.CalculIsConforme(_CalculatriceDc.Calcul))
+                    {
+                        var resultat = _CalculatriceDc.CalculsClient.EnvoyerCalculAuServeur(_CalculatriceDc.Calcul);
+                        _CalculatriceDc.ResultatVm = resultat.ToString(CultureInfo.CurrentCulture);
 
-                    _CalculatriceDc.EnregistrerCalculEtMettreVueAJour(this, _CalculatriceDc.Calcul); 
-                    _CalculatriceDc.IsBtEgalDejaClique = false;
-                    _CalculatriceDc.AffichageFinal = _CalculatriceDc.ResultatVm;
+                        _CalculatriceDc.EnregistrerCalculEtMettreVueAJour(this, _CalculatriceDc.Calcul);
+                        _CalculatriceDc.IsBtEgalDejaClique = false;
+                        _CalculatriceDc.AffichageFinal = _CalculatriceDc.ResultatVm;
+                    }
                 }
             }
         }
@@ -119,11 +114,11 @@ namespace Calculatrice.ViewModels
         /// <param name="calcul"></param>
         public void MettreVueAJour(Calcul calcul)
         {
-            if (HistoriquePourLaVue.Count == 10)
+            if (Historique.Count == 10)
             {
-                HistoriquePourLaVue.RemoveAt(0);
+                Historique.RemoveAt(0);
             }
-            HistoriquePourLaVue.Add(new OperationVM(calcul));
+            Historique.Add(new OperationVM(calcul));
         }
     }
 }
