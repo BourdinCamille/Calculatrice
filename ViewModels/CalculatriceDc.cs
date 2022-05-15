@@ -21,7 +21,7 @@ using EnumOperateur = Calculatrice.Models.EnumOperateur;
 namespace Calculatrice.ViewModels
 {
     // TO-DO :
-    // - refacto pour toute la partie allant du calcul à son enregistrement (si possible)
+    // - refacto pour toute la partie allant du calcul à son enregistrement côté client (si possible)
     // - coder le corps des méthodes Can...
     // - gestion des exceptions en créant une classe dédiée
     // - gérer les références nulles
